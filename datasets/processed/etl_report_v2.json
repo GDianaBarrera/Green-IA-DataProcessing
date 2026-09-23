@@ -1,0 +1,24 @@
+{
+    "status": "SUCCESS",
+    "extract": {
+        "hardware_rows": 50,
+        "log_rows": 100000
+    },
+    "transform": {
+        "servers_detected": 50,
+        "join_key": "hardware_id",
+        "power_column_renamed": {
+            "from": "energia_watts",
+            "to": "estimated_power_watts"
+        },
+        "excluded_columns": [
+            "prediccion_watts",
+            "accion_recomendada"
+        ]
+    },
+    "load": {
+        "rows_loaded": 100000,
+        "columns_loaded": 14,
+        "output_file": "dataset_green_ai_v2.csv"
+    }
+}

@@ -1,0 +1,33 @@
+{
+    "dataset_name": "dataset_green_ai_v2",
+    "source_type": "synthetic",
+    "source_file": "BD_GreenAi.xlsx",
+    "raw_sha256": "16c6155f68bbff340463e9920d519b773e773668090deea409c9fa8d001e67cf",
+    "hardware_rows": 50,
+    "log_rows": 100000,
+    "processed_rows": 100000,
+    "unique_servers": 50,
+    "columns": [
+        "log_id",
+        "hardware_id",
+        "timestamp",
+        "cpu_utilization_pct",
+        "ram_utilization_pct",
+        "temperatura_celsius",
+        "estimated_power_watts",
+        "cumple_sla",
+        "hostname",
+        "cpu_cores",
+        "ram_gb",
+        "max_watts",
+        "ubicacion_rack",
+        "estado"
+    ],
+    "power_variable": {
+        "name": "estimated_power_watts",
+        "unit": "W",
+        "type": "synthetic_estimate"
+    },
+    "generated_at_utc": "2026-09-18T16:18:50.631439+00:00",
+    "version": "2.0"
+}
