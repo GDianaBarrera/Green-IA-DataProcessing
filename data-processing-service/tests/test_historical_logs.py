@@ -121,3 +121,14 @@ def test_configuration_rejected_at_startup(monkeypatch, name, value):
     monkeypatch.setenv(name, value)
     with pytest.raises(ValueError):
         Settings.from_env()
+
+
+@pytest.mark.parametrize("token", ["<TU_ACCESS_TOKEN>", "TU_ACCESS_TOKEN", " ", "sb_publishable_example", "sb_secret_example", "token with spaces"])
+def test_placeholder_or_api_key_is_not_a_read_token(monkeypatch, token):
+    monkeypatch.setenv("SUPABASE_ENABLED", "true")
+    monkeypatch.setenv("SUPABASE_URL", "https://test.supabase.co")
+    monkeypatch.setenv("SUPABASE_API_KEY", "fixture-key")
+    monkeypatch.setenv("SUPABASE_READ_TOKEN", token)
+    with pytest.raises(ValueError) as error:
+        Settings.from_env()
+    assert token.strip() not in str(error.value) if token.strip() else True

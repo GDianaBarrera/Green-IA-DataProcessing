@@ -35,6 +35,48 @@ El motor Docker sigue devolviendo acceso denegado aun tras solicitar los permiso
 sesión. Build, suite en Python 3.14 y tráfico Docker no están certificados todavía.
 El usuario confirmó que no hay credenciales: Supabase permanece preparado/deshabilitado.
 
+## Revisión posterior con Supabase y confirmación de Docker
+
+Verificación local final: 86 pruebas aprobadas (Python 3.12.14), Compose local validado
+con SUPABASE_ENABLED=true y credenciales ficticias transmitidas correctamente, script
+de guardado probado con datos ficticios y bloqueo de sobrescritura comprobado.
+`git diff --check` sin errores; solo `.env.example` está versionado entre los archivos
+de entorno. No se guardaron en el repositorio las credenciales aportadas en el chat.
+
+El usuario informó que `Test-Docker.ps1` terminó con OK y que configuró Supabase en
+variables temporales de su propia sesión PowerShell. Ese resultado Docker se registra
+como evidencia comunicada por el usuario; esta sesión sigue sin acceso al named pipe.
+La sesión del agente no hereda las variables de otro PowerShell. No hay `.env` local
+en el servicio al revisar. `Save-LocalConfig.ps1` permite persistirlas desde esa sesión
+sin imprimir valores, y sin sobrescribir un archivo existente. `.env*` (salvo ejemplo)
+queda excluido de Git y del build. Compose local ahora respeta SUPABASE_ENABLED y
+transmite las variables al contenedor; antes lo forzaba a false.
+
+La URL y clave publishable proporcionadas respondieron 200 a una consulta de `logs`
+con la selección de columnas esperada y `limit=0`. Otra consulta `select=log_id&limit=1`
+devolvió una fila sin JWT de usuario. No se imprimió ni guardó su identificador.
+Esto verifica conectividad y visibilidad anónima de al menos un registro; NO verifica
+una identidad dedicada de solo lectura, aislamiento por usuario ni ausencia de permisos
+de escritura. Revisar GRANT/RLS con el responsable; no se modificaron políticas.
+Un token literal `<TU_ACCESS_TOKEN>` o una API key en SUPABASE_READ_TOKEN se rechaza.
+
+Repositorios revisados nuevamente:
+
+- Gateway `9fca369ccee9c0e5b04eced1a73235edc5911d88`: application.yaml solo enruta
+  las tres operaciones Monitoring. SecurityConfiguration.java solo autoriza esas rutas
+  y termina en denyAll. Una petición Data Processing no llega a este servicio.
+- El timeout global de Gateway es 6 segundos frente a 10 segundos por defecto en
+  Data Processing; asignar un presupuesto mayor a las rutas nuevas.
+- Gateway exige JWT válido y claim firmado `user_role=OPERATOR|ADMIN`; crear una
+  cuenta Supabase no añade automáticamente ese claim. No aceptar roles del navegador.
+- Frontend permanece en `0ef8a5c9dbfa108c133e2d59392dc6b032757058`: fetchMonitoring
+  no envía Authorization ni los parámetros de consulta requeridos; consume listas
+  de snapshots del mock y trata catalog como inventario. Sigue usando el login del
+  backend antiguo y localStorage para el usuario. No consume Data Processing.
+
+Estas incompatibilidades externas siguen impidiendo certificar un flujo completo al
+hacer push. Ver `gateway-handoff.md` para cambios concretos del repositorio Gateway.
+
 ## Dependencias externas verificadas
 
 Fuentes revisadas:

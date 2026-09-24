@@ -15,5 +15,6 @@ __pycache__
 *.log
 *.pem
 *.key
+*.local.json
 datasets
 tests/temp

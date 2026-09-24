@@ -113,7 +113,8 @@ docker compose -f compose.local.yaml up -d --build --wait
 ```
 
 Abrir `http://localhost:8001/docs`. Este modo crea su propia red, publica el puerto
-solo en localhost y mantiene Supabase deshabilitado. Monitoring se busca en el host
+solo en localhost. Supabase queda deshabilitado por defecto; se habilita con las
+variables SUPABASE del entorno o `.env`. Monitoring se busca en el host
 en 8080 mediante `host.docker.internal`; si no está ejecutándose, las consultas de
 Monitoring devuelven 503 y la salud del servicio sigue disponible.
 No requiere copiar `.env` ni crear redes manualmente. Para parar únicamente este servicio:
@@ -121,6 +122,20 @@ No requiere copiar `.env` ni crear redes manualmente. Para parar únicamente est
 ```powershell
 docker compose -f compose.local.yaml down
 ```
+
+Si las credenciales están solo en la sesión de PowerShell donde se probó Supabase,
+guardarlas desde **esa misma sesión** sin copiarlas al chat:
+
+```powershell
+& .\scripts\Save-LocalConfig.ps1
+docker compose --env-file .env -f compose.local.yaml up -d --build --wait
+```
+
+El script rechaza marcadores como `<TU_ACCESS_TOKEN>` y no sobrescribe un `.env`
+existente. Un valor por línea; `HISTORICAL_MAX_PAGE_SIZE=500` sin coma final.
+La clave publishable identifica la aplicación, no reemplaza el JWT de lectura
+dedicado. Conectar una extensión de VS Code no configura automáticamente el contenedor.
+Guardar las credenciales tampoco comprueba sus permisos efectivos de solo lectura.
 
 ### Verificación completa del contenedor
 

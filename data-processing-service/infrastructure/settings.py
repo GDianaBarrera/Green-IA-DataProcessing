@@ -19,6 +19,15 @@ def validate_timeout(value):
     return value
 
 
+def configured_credential(value):
+    """Reject copied template markers without echoing credential contents."""
+    normalized = value.strip()
+    return bool(normalized) and not any(char.isspace() for char in normalized) and not (
+        "<" in normalized or ">" in normalized
+        or normalized.upper() in {"TU_ACCESS_TOKEN", "YOUR_ACCESS_TOKEN", "CHANGEME"}
+    )
+
+
 @dataclass(frozen=True)
 class Settings:
     monitoring_url: str
@@ -39,8 +48,10 @@ class Settings:
         token = os.getenv("SUPABASE_READ_TOKEN", "")
         if enabled == "true":
             validate_url(url, secure=True)
-            if not key or not token:
+            if not configured_credential(key) or not configured_credential(token):
                 raise ValueError("Supabase habilitado requiere API key y token de lectura dedicado.")
+            if token.startswith(("sb_publishable_", "sb_secret_")):
+                raise ValueError("SUPABASE_READ_TOKEN requiere un JWT de lectura, no una API key.")
         size = int(os.getenv("HISTORICAL_MAX_PAGE_SIZE", "500"))
         if not 1 <= size <= 500:
             raise ValueError("HISTORICAL_MAX_PAGE_SIZE debe estar entre 1 y 500.")
