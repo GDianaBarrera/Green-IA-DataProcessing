@@ -4,6 +4,8 @@ from typing import Any
 from uuid import uuid4
 
 import pandas as pd
+import math
+import json
 
 
 class PreparePredictionDatasetUseCase:
@@ -52,6 +54,13 @@ class PreparePredictionDatasetUseCase:
             dataframe["metric"] == "node.cpu.utilization"
         ].copy()
 
+        if "unit" in cpu_data and not cpu_data["unit"].eq("ratio").all():
+            raise ValueError("CPU de Monitoring debe tener unidad ratio.")
+        if "labels" in cpu_data and cpu_data["labels"].map(lambda v: json.dumps(v, sort_keys=True)).nunique() > 1:
+            raise ValueError("Prediction requiere una única serie de CPU.")
+        if cpu_data["origin"].nunique(dropna=False) != 1:
+            raise ValueError("No se pueden mezclar procedencias en Prediction.")
+
         if cpu_data.empty:
             raise ValueError(
                 "El dataset no contiene la métrica node.cpu.utilization."
@@ -69,6 +78,8 @@ class PreparePredictionDatasetUseCase:
         resource_row = resources.iloc[0]
 
         cpu_data = cpu_data.sort_values("timestamp")
+        if cpu_data["timestamp"].duplicated().any():
+            raise ValueError("Prediction no admite timestamps duplicados.")
 
         features: list[dict[str, Any]] = []
 
@@ -86,6 +97,8 @@ class PreparePredictionDatasetUseCase:
                 continue
 
             cpu_percentage = float(value) * 100.0
+            if not math.isfinite(cpu_percentage) or not 0 <= cpu_percentage <= 100:
+                raise ValueError("CPU fuera del rango de ratio [0, 1].")
 
             features.append(
                 {
@@ -123,8 +136,20 @@ class PreparePredictionDatasetUseCase:
             else "partial"
         )
 
+        excluded = len(cpu_data) - len(features)
+        warnings = list(dataframe.attrs.get("warnings", []))
+        if excluded:
+            warnings.append(f"Se excluyeron {excluded} muestras no utilizables; no se imputaron huecos.")
+            data_status = "partial"
         return {
             "schemaVersion": self.SCHEMA_VERSION,
+            "contractStatus": "provisional",
+            "requestedPeriod": dataframe.attrs.get("requestedPeriod") or {
+                "start": self._to_rfc3339(cpu_data.iloc[0]["timestamp"]),
+                "end": self._to_rfc3339(cpu_data.iloc[-1]["timestamp"]),
+            },
+            "units": {"cpu_utilization": "%"},
+            "excludedSampleCount": excluded,
             "datasetId": f"dataset-{uuid4()}",
             "period": {
                 "start": features[0]["timestamp"],
@@ -138,7 +163,7 @@ class PreparePredictionDatasetUseCase:
             "features": features,
             "origins": origins,
             "dataStatus": data_status,
-            "warnings": [],
+            "warnings": warnings,
         }
 
     @staticmethod

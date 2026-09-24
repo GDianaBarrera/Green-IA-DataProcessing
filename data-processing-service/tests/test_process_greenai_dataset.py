@@ -42,7 +42,8 @@ TEST_OUTPUT = (
 )
 
 
-def test_process_greenai_dataset():
+def test_process_greenai_dataset(tmp_path):
+    output_path = tmp_path / "greenai_processed_test.csv"
 
     print("\n=== PRUEBA ETL HEXAGONAL ===")
 
@@ -53,7 +54,7 @@ def test_process_greenai_dataset():
 
     # Adaptador de salida
     repository = CsvDatasetRepository(
-        TEST_OUTPUT
+        output_path
     )
 
     # Caso de uso
@@ -98,11 +99,11 @@ def test_process_greenai_dataset():
         not in processed.columns
     )
 
-    assert TEST_OUTPUT.exists()
+    assert output_path.exists()
 
     # Verificar persistencia
     saved = pd.read_csv(
-        TEST_OUTPUT
+        output_path
     )
 
     assert len(saved) == 100000
@@ -135,11 +136,10 @@ def test_process_greenai_dataset():
     )
 
     # Limpiar archivo de prueba
-    TEST_OUTPUT.unlink()
-
-    if TEST_OUTPUT.parent.exists():
-        TEST_OUTPUT.parent.rmdir()
+    output_path.unlink()
 
 
 if __name__ == "__main__":
-    test_process_greenai_dataset()
+    import tempfile
+    with tempfile.TemporaryDirectory() as directory:
+        test_process_greenai_dataset(Path(directory))

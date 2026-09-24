@@ -179,6 +179,8 @@ def test_process_metrics_handles_no_data_without_error():
         "metric": "node.filesystem.used",
         "unit": "bytes",
         "dataStatus": "no_data",
+        "aggregation": "instant",
+        "windowSeconds": None,
         "series": [],
     }
 

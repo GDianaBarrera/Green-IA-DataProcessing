@@ -25,7 +25,8 @@ TEST_OUTPUT = (
 )
 
 
-def test_repository():
+def test_repository(tmp_path):
+    output_path = tmp_path / "test_output.csv"
     print("\n=== PRUEBA DEL REPOSITORIO CSV ===")
 
     # Dataset pequeño exclusivamente para la prueba
@@ -41,7 +42,7 @@ def test_repository():
     })
 
     repository = CsvDatasetRepository(
-        TEST_OUTPUT
+        output_path
     )
 
     repository.save(
@@ -49,11 +50,11 @@ def test_repository():
     )
 
     # Verificar que el archivo fue creado
-    assert TEST_OUTPUT.exists()
+    assert output_path.exists()
 
     # Volver a leerlo
     saved_data = pd.read_csv(
-        TEST_OUTPUT
+        output_path
     )
 
     # Verificar cantidad de registros
@@ -67,7 +68,7 @@ def test_repository():
 
     print(
         "Archivo creado:",
-        TEST_OUTPUT
+        output_path
     )
 
     print(
@@ -85,12 +86,10 @@ def test_repository():
     )
 
     # Eliminar archivo temporal
-    TEST_OUTPUT.unlink()
-
-    # Eliminar carpeta temporal si queda vacía
-    if TEST_OUTPUT.parent.exists():
-        TEST_OUTPUT.parent.rmdir()
+    output_path.unlink()
 
 
 if __name__ == "__main__":
-    test_repository()
+    import tempfile
+    with tempfile.TemporaryDirectory() as directory:
+        test_repository(Path(directory))

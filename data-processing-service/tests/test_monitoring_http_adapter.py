@@ -19,14 +19,24 @@ def test_monitoring_adapter_configuration():
 
 def test_get_history_preserves_monitoring_response(monkeypatch):
     monitoring_response = {
+        "metric": "node.memory.used",
+        "unit": "bytes",
+        "aggregation": "instant",
+        "windowSeconds": None,
+        "start": "2026-09-23T20:00:00Z",
+        "end": "2026-09-23T21:00:00Z",
+        "stepSeconds": 60,
+        "warnings": [],
         "dataStatus": "partial",
         "series": [
             {
                 "resource": {
+                    "type": "node",
                     "cluster": "test-lab",
                     "id": "host:9100",
                 },
                 "origin": "simulated",
+                "labels": {},
                 "source": "prometheus",
                 "samples": [
                     {

@@ -1,6 +1,10 @@
 from typing import Any
 
 import pandas as pd
+import json
+
+from domain.errors import InvalidResponse
+from domain.monitoring_contract import validate_payload
 
 
 class ProcessMetricsUseCase:
@@ -16,6 +20,7 @@ class ProcessMetricsUseCase:
     """
 
     def execute(self, monitoring_response: dict[str, Any]) -> pd.DataFrame:
+        validate_payload(monitoring_response)
         metric = monitoring_response.get("metric")
         unit = monitoring_response.get("unit")
         aggregation = monitoring_response.get("aggregation")
@@ -24,13 +29,24 @@ class ProcessMetricsUseCase:
 
         series = monitoring_response.get("series", [])
         rows: list[dict[str, Any]] = []
+        seen = {}
+        duplicate_count = 0
 
         for metric_series in series:
             resource = metric_series.get("resource", {})
             labels = metric_series.get("labels", {})
             samples = metric_series.get("samples", [])
 
-            for sample in samples:
+            for sample in sorted(samples, key=lambda s: pd.Timestamp(s["timestamp"])):
+                identity = (json.dumps(resource, sort_keys=True), json.dumps(labels, sort_keys=True),
+                            metric_series["source"], metric_series["origin"], pd.Timestamp(sample["timestamp"]))
+                signature = (sample["value"], sample["quality"])
+                if identity in seen:
+                    if seen[identity] != signature:
+                        raise InvalidResponse("Monitoring devolvió muestras duplicadas contradictorias.")
+                    duplicate_count += 1
+                    continue
+                seen[identity] = signature
                 row = {
                     "metric": metric,
                     "unit": unit,
@@ -55,6 +71,10 @@ class ProcessMetricsUseCase:
                 rows.append(row)
 
         dataframe = pd.DataFrame(rows)
+        dataframe.attrs["warnings"] = list(monitoring_response.get("warnings", []))
+        if duplicate_count:
+            dataframe.attrs["warnings"].append(f"Se eliminaron {duplicate_count} muestras duplicadas idénticas.")
+        dataframe.attrs["requestedPeriod"] = {k: monitoring_response[k] for k in ("start", "end") if k in monitoring_response}
 
         if dataframe.empty:
             return dataframe
@@ -62,7 +82,8 @@ class ProcessMetricsUseCase:
         dataframe["timestamp"] = pd.to_datetime(
             dataframe["timestamp"],
             utc=True,
-            errors="coerce",
+            errors="raise",
+            format="mixed",
         )
 
         return dataframe

@@ -1,0 +1,12 @@
+# Standalone local start: no external network or Supabase credentials required.
+services:
+  data-processing:
+    build: .
+    environment:
+      MONITORING_BASE_URL: ${MONITORING_BASE_URL:-http://host.docker.internal:8080}
+      REQUEST_TIMEOUT_SECONDS: ${REQUEST_TIMEOUT_SECONDS:-10}
+      SUPABASE_ENABLED: "false"
+    ports:
+      - "127.0.0.1:${DATA_PROCESSING_LOCAL_PORT:-8001}:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
