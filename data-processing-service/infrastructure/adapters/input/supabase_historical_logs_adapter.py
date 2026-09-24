@@ -27,7 +27,7 @@ class SupabaseHistoricalLogsAdapter(HistoricalLogsSource):
         if not 1 <= limit <= 500:
             raise ValueError("Límite de lectura inválido")
         params = [
-            ("select", COLUMNS), ("hardware_id", "eq." + quoted(hardware_id)),
+            ("select", COLUMNS), ("hardware_id", "eq." + hardware_id),
             ("timestamp", "gte." + timestamp(start)), ("timestamp", "lte." + timestamp(end)),
             ("order", "timestamp.asc,log_id.asc"), ("limit", str(limit)),
         ]
