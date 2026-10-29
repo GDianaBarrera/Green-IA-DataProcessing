@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "datasetId": "dataset-example-001",
+  "period": {
+    "start": "2026-09-21T15:00:00Z",
+    "end": "2026-09-21T15:00:15Z"
+  },
+  "resource": {
+    "type": "node",
+    "cluster": "fixture-lab",
+    "id": "fixture-node-01"
+  },
+  "features": [
+    {
+      "timestamp": "2026-09-21T15:00:00Z",
+      "cpu_utilization": 0.0,
+      "origin": "simulated",
+      "quality": "ok"
+    },
+    {
+      "timestamp": "2026-09-21T15:00:15Z",
+      "cpu_utilization": 42.0,
+      "origin": "simulated",
+      "quality": "ok"
+    }
+  ],
+  "origins": [
+    "simulated"
+  ],
+  "dataStatus": "partial",
+  "warnings": []
+}

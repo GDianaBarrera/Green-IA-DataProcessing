@@ -20,6 +20,9 @@ Thumbs.db
 
 # Variables de entorno
 .env
+.env.*
+!.env.example
+*.local.json
 
 # Archivos temporales
 *.tmp

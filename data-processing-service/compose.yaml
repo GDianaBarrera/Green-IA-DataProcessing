@@ -1,0 +1,25 @@
+services:
+  data-processing:
+    build: .
+    environment:
+      MONITORING_BASE_URL: ${MONITORING_BASE_URL:-http://monitoring:8080}
+      REQUEST_TIMEOUT_SECONDS: ${REQUEST_TIMEOUT_SECONDS:-10}
+      SUPABASE_ENABLED: ${SUPABASE_ENABLED:-false}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_API_KEY: ${SUPABASE_API_KEY:-}
+      SUPABASE_READ_TOKEN: ${SUPABASE_READ_TOKEN:-}
+      HISTORICAL_MAX_PAGE_SIZE: ${HISTORICAL_MAX_PAGE_SIZE:-500}
+    expose:
+      - "8000"
+    networks:
+      - greenai
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  greenai:
+    external: true
+    name: ${GREENAI_NETWORK:-greenai-net}
